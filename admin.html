@@ -6,7 +6,7 @@
   <title>Admin — Jazo Phone Accessories</title>
   <link rel="icon" type="image/jpeg" href="images/jazologof.jpeg" />
   <link rel="stylesheet" href="css/admin.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 </head>
 <body>
 
@@ -83,11 +83,12 @@
           <input type="text" id="admin-search" placeholder="Search products…" class="admin-search" />
           <select id="admin-cat-filter" class="admin-select">
             <option value="all">All Categories</option>
-            
-            
-            
-            
-            
+            <option value="cases">Cases</option>
+            <option value="chargers">Chargers</option>
+            <option value="earphones">Earphones</option>
+            <option value="screen-protectors">Screen Protectors</option>
+            <option value="powerbanks">Powerbanks</option>
+            <option value="accessories">Accessories</option>
           </select>
         </div>
       </div>
@@ -122,11 +123,12 @@
                 <label for="p-category">Category <span class="req">*</span></label>
                 <select id="p-category" required>
                   <option value="">Select category…</option>
-                  
-                  
-                  
-                  
-                  
+                  <option value="cases">Cases</option>
+                  <option value="chargers">Chargers</option>
+                  <option value="earphones">Earphones</option>
+                  <option value="screen-protectors">Screen Protectors</option>
+                  <option value="powerbanks">Powerbanks</option>
+                  <option value="accessories">Accessories</option>              
                 </select>
               </div>
             </div>
@@ -153,25 +155,15 @@
             </div>
           </div>
           <div class="form-section">
-            <h3>Image</h3>
-            <div class="form-row">
-              <div class="form-group">
-                <label for="p-image-url">Image URL</label>
-                <input type="url" id="p-image-url" placeholder="https://…" />
-              </div>
-              <div class="form-group">
-                <label>Or Upload Image</label>
-                <div class="file-drop" id="file-drop">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                  <span>Drop image here or <label for="p-image-file" class="file-link">browse</label></span>
-                  <input type="file" id="p-image-file" accept="image/*" style="display:none" />
-                </div>
-              </div>
+            <h3>Product Images</h3>
+            <input type="file" id="p-image-file" accept="image/*" multiple style="display:none" />
+            <div class="img-upload-grid" id="img-upload-grid">
+              <button type="button" class="img-add-btn" id="img-add-btn">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                <span>Add Photos</span>
+              </button>
             </div>
-            <div class="image-preview-wrap" id="image-preview-wrap" style="display:none;">
-              <img id="image-preview" src="" alt="Preview" />
-              <button type="button" class="remove-img-btn" id="remove-img-btn">&times; Remove</button>
-            </div>
+            <p class="img-hint">Click to browse. You can select multiple images at once.</p>
           </div>
           <div class="form-section">
             <h3>Options</h3>

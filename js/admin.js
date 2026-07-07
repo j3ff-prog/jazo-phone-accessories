@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════
-   ROZINA SIGNATURE LIVING — Admin JS (Vercel/Supabase)
+   JAZO PHONE ACCESSORIES — Admin JS
    ═══════════════════════════════════════════ */
 
 (() => {
@@ -14,10 +14,9 @@
   let adminCatFilter = 'all';
   let allProducts    = [];
   let allOrders      = [];
-  let pendingFile    = null;   // File object waiting to be uploaded
+  let pendingFiles   = [];
   let toastTimer;
 
-  /* ── DOM ── */
   const loginScreen  = document.getElementById('login-screen');
   const dashboard    = document.getElementById('dashboard');
   const loginBtn     = document.getElementById('login-btn');
@@ -27,17 +26,14 @@
   const logoutBtn    = document.getElementById('logout-btn');
   const navItems     = document.querySelectorAll('.nav-item');
   const toast        = document.getElementById('admin-toast');
-
   const statTotal    = document.getElementById('stat-total');
   const statStock    = document.getElementById('stat-stock');
   const statFeatured = document.getElementById('stat-featured');
   const statOrders   = document.getElementById('stat-orders');
-
   const adminTbody   = document.getElementById('admin-tbody');
   const adminEmpty   = document.getElementById('admin-empty');
   const adminSearchI = document.getElementById('admin-search');
   const adminCatSel  = document.getElementById('admin-cat-filter');
-
   const productForm  = document.getElementById('product-form');
   const formTitle    = document.getElementById('form-title');
   const editIdField  = document.getElementById('edit-id');
@@ -53,22 +49,15 @@
   const pStock       = document.getElementById('p-stock');
   const pFeatured    = document.getElementById('p-featured');
   const pNew         = document.getElementById('p-new');
-  const pImageUrl    = document.getElementById('p-image-url');
   const pImageFile   = document.getElementById('p-image-file');
-  const fileDrop     = document.getElementById('file-drop');
-  const imgPreviewW  = document.getElementById('image-preview-wrap');
-  const imgPreview   = document.getElementById('image-preview');
-  const removeImgBtn = document.getElementById('remove-img-btn');
-
   const delOverlay   = document.getElementById('del-overlay');
   const delName      = document.getElementById('del-name');
   const delConfirm   = document.getElementById('del-confirm');
   const delCancel    = document.getElementById('del-cancel');
-
   const ordersTbody  = document.getElementById('orders-tbody');
   const ordersEmpty  = document.getElementById('orders-empty');
 
-  /* ══════════════ AUTH ══════════════ */
+  /* AUTH */
   function checkAuth() {
     if (sessionStorage.getItem(AUTH_KEY) === '1') showDashboard();
     else showLogin();
@@ -107,7 +96,7 @@
     loginPass.value = '';
   });
 
-  /* ══════════════ DATA ══════════════ */
+  /* DATA */
   async function loadAll() {
     try {
       [allProducts, allOrders] = await Promise.all([
@@ -122,7 +111,7 @@
     }
   }
 
-  /* ══════════════ NAV ══════════════ */
+  /* NAV */
   navItems.forEach(btn => {
     btn.addEventListener('click', () => {
       navItems.forEach(b => b.classList.remove('active'));
@@ -139,7 +128,7 @@
     if (view === 'add' && !editingId) resetForm();
   }
 
-  /* ══════════════ STATS ══════════════ */
+  /* STATS */
   function updateStats() {
     statTotal.textContent    = allProducts.length;
     statStock.textContent    = allProducts.filter(p => p.stock > 0).length;
@@ -147,15 +136,13 @@
     statOrders.textContent   = allOrders.length;
   }
 
-  /* ══════════════ PRODUCTS TABLE ══════════════ */
+  /* PRODUCTS TABLE */
   function renderTable() {
     let list = [...allProducts];
     if (adminCatFilter !== 'all') list = list.filter(p => p.category === adminCatFilter);
     if (adminSearch) {
       const q = adminSearch.toLowerCase();
-      list = list.filter(p =>
-        p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q)
-      );
+      list = list.filter(p => p.name.toLowerCase().includes(q) || p.category.toLowerCase().includes(q));
     }
 
     if (!list.length) {
@@ -200,7 +187,7 @@
   adminSearchI.addEventListener('input', e => { adminSearch = e.target.value.trim(); renderTable(); });
   adminCatSel.addEventListener('change', e => { adminCatFilter = e.target.value; renderTable(); });
 
-  /* ══════════════ ORDERS ══════════════ */
+  /* ORDERS */
   function renderOrders() {
     if (!allOrders.length) {
       if (ordersTbody) ordersTbody.innerHTML = '';
@@ -211,16 +198,13 @@
     if (!ordersTbody) return;
 
     ordersTbody.innerHTML = allOrders.map(o => {
-      const date = new Date(o.created_at).toLocaleDateString('en-KE', {
-        day: 'numeric', month: 'short', year: 'numeric'
-      });
-      const statusClass = o.status === 'delivered' ? 'status-done'
-        : o.status === 'cancelled' ? 'status-cancel' : 'status-pending';
+      const date = new Date(o.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
+      const statusClass = o.status === 'delivered' ? 'status-done' : o.status === 'cancelled' ? 'status-cancel' : 'status-pending';
 
       return `<tr>
         <td><strong>${esc(o.id)}</strong></td>
         <td>${esc(o.customer.name)}<br><small>${esc(o.customer.phone)}</small></td>
-        <td>${o.items.map(i => `${esc(i.name)} ×${i.qty}`).join('<br>')}</td>
+        <td>${o.items.map(i => `${esc(i.name)} x${i.qty}`).join('<br>')}</td>
         <td>${JazoAPI.formatPrice(o.total)}</td>
         <td><span class="order-status ${statusClass}">${esc(o.status)}</span></td>
         <td>${date}</td>
@@ -248,30 +232,29 @@
     });
   }
 
-  /* ══════════════ PRODUCT FORM ══════════════ */
+  /* PRODUCT FORM */
   function resetForm() {
-    editingId  = null;
-    pendingFile = null;
+    editingId    = null;
+    pendingFiles = [];
     productForm.reset();
-    editIdField.value = '';
+    editIdField.value     = '';
     formTitle.textContent = 'Add Product';
     submitBtn.textContent = 'Add Product';
     cancelEdit.style.display = 'none';
     formError.textContent = '';
-    imgPreviewW.style.display = 'none';
-    imgPreview.src = '';
+    renderImageGrid();
   }
 
   function startEdit(id) {
     const p = allProducts.find(x => x.id === id);
     if (!p) return;
-    editingId   = id;
-    pendingFile = null;
-    formTitle.textContent  = 'Edit Product';
-    submitBtn.textContent  = 'Save Changes';
-    cancelEdit.style.display = 'inline-flex';
-    editIdField.value = id;
+    editingId    = id;
+    pendingFiles = [];
 
+    formTitle.textContent    = 'Edit Product';
+    submitBtn.textContent    = 'Save Changes';
+    cancelEdit.style.display = 'inline-flex';
+    editIdField.value        = id;
     pName.value       = p.name;
     pCategory.value   = p.category;
     pDesc.value       = p.description;
@@ -280,12 +263,9 @@
     pStock.value      = p.stock;
     pFeatured.checked = p.featured;
     pNew.checked      = p.is_new;
-    pImageUrl.value   = p.image && !p.image.includes('supabase') ? p.image : '';
-
-    if (p.image) { imgPreview.src = p.image; imgPreviewW.style.display = 'flex'; }
-    else imgPreviewW.style.display = 'none';
-
     formError.textContent = '';
+    renderImageGrid();
+
     navItems.forEach(b => b.classList.remove('active'));
     document.querySelector('[data-view="add"]').classList.add('active');
     switchView('add');
@@ -310,15 +290,25 @@
       return;
     }
 
-    submitBtn.disabled = true;
+    submitBtn.disabled    = true;
     submitBtn.textContent = editingId ? 'Saving…' : 'Adding…';
 
     try {
-      // Upload image file to Supabase Storage if one was selected
-      let imageUrl = pImageUrl.value.trim();
-      if (pendingFile) {
-        submitBtn.textContent = 'Uploading image…';
-        imageUrl = await JazoAPI.uploadImage(pendingFile);
+      let imageUrls = [];
+
+      if (pendingFiles.length) {
+        submitBtn.textContent = 'Uploading images…';
+        imageUrls = await Promise.all(pendingFiles.map(f => JazoAPI.uploadImage(f)));
+      }
+
+      // Editing with no new images — keep existing ones
+      if (!imageUrls.length && editingId) {
+        const existing = allProducts.find(p => p.id === editingId);
+        if (existing) {
+          imageUrls = (existing.images && existing.images.length)
+            ? existing.images
+            : (existing.image ? [existing.image] : []);
+        }
       }
 
       const payload = {
@@ -330,7 +320,8 @@
         stock:       Number(pStock.value),
         featured:    pFeatured.checked,
         is_new:      pNew.checked,
-        image:       imageUrl,
+        image:       imageUrls[0] || '',
+        images:      imageUrls,
       };
 
       if (editingId) {
@@ -353,49 +344,47 @@
     } catch (err) {
       formError.textContent = err.message || 'Failed to save product.';
     } finally {
-      submitBtn.disabled = false;
+      submitBtn.disabled    = false;
       submitBtn.textContent = editingId ? 'Save Changes' : 'Add Product';
     }
   });
 
-  /* ── Image selection ── */
-  function setImageFile(file) {
-    if (!file || !file.type.startsWith('image/')) return;
-    pendingFile = file;
-    imgPreview.src = URL.createObjectURL(file);
-    imgPreviewW.style.display = 'flex';
-    pImageUrl.value = '';
+  /* IMAGE UPLOAD GRID */
+  const imgAddBtn     = document.getElementById('img-add-btn');
+  const imgUploadGrid = document.getElementById('img-upload-grid');
+
+  imgAddBtn.addEventListener('click', () => pImageFile.click());
+
+  pImageFile.addEventListener('change', e => {
+    Array.from(e.target.files).forEach(file => {
+      if (file.type.startsWith('image/')) pendingFiles.push(file);
+    });
+    pImageFile.value = '';
+    renderImageGrid();
+  });
+
+  function renderImageGrid() {
+    imgUploadGrid.querySelectorAll('.img-thumb-wrap').forEach(el => el.remove());
+    pendingFiles.forEach((file, i) => {
+      const wrap      = document.createElement('div');
+      wrap.className  = 'img-thumb-wrap';
+      const img       = document.createElement('img');
+      img.src         = URL.createObjectURL(file);
+      const removeBtn = document.createElement('button');
+      removeBtn.className   = 'img-thumb-remove';
+      removeBtn.type        = 'button';
+      removeBtn.innerHTML   = '&times;';
+      removeBtn.addEventListener('click', () => {
+        pendingFiles.splice(i, 1);
+        renderImageGrid();
+      });
+      wrap.appendChild(img);
+      wrap.appendChild(removeBtn);
+      imgUploadGrid.insertBefore(wrap, imgAddBtn);
+    });
   }
 
-  pImageFile.addEventListener('change', e => setImageFile(e.target.files[0]));
-
-  fileDrop.addEventListener('dragover', e => { e.preventDefault(); fileDrop.style.borderColor = 'var(--gold)'; });
-  fileDrop.addEventListener('dragleave', () => { fileDrop.style.borderColor = ''; });
-  fileDrop.addEventListener('drop', e => {
-    e.preventDefault();
-    fileDrop.style.borderColor = '';
-    setImageFile(e.dataTransfer.files[0]);
-  });
-
-  pImageUrl.addEventListener('input', () => {
-    if (pImageUrl.value.trim()) {
-      pendingFile = null;
-      imgPreview.src = pImageUrl.value.trim();
-      imgPreviewW.style.display = 'flex';
-    } else {
-      imgPreviewW.style.display = 'none';
-    }
-  });
-
-  removeImgBtn.addEventListener('click', () => {
-    pendingFile = null;
-    imgPreview.src = '';
-    imgPreviewW.style.display = 'none';
-    pImageUrl.value = '';
-    pImageFile.value = '';
-  });
-
-  /* ══════════════ DELETE ══════════════ */
+  /* DELETE */
   function confirmDelete(id, name) {
     deleteTarget = id;
     delName.textContent = name;
@@ -406,7 +395,7 @@
     if (!deleteTarget) return;
     try {
       await JazoAPI.deleteProduct(deleteTarget);
-      allProducts = allProducts.filter(p => p.id !== deleteTarget);
+      allProducts  = allProducts.filter(p => p.id !== deleteTarget);
       deleteTarget = null;
       delOverlay.classList.remove('active');
       updateStats();
@@ -415,15 +404,12 @@
     } catch { showToast('Failed to delete product'); }
   });
 
-  delCancel.addEventListener('click', () => {
-    deleteTarget = null;
-    delOverlay.classList.remove('active');
-  });
+  delCancel.addEventListener('click', () => { deleteTarget = null; delOverlay.classList.remove('active'); });
   delOverlay.addEventListener('click', e => {
     if (e.target === delOverlay) { deleteTarget = null; delOverlay.classList.remove('active'); }
   });
 
-  /* ══════════════ TOAST ══════════════ */
+  /* TOAST */
   function showToast(msg) {
     toast.textContent = msg;
     toast.classList.add('show');
@@ -437,10 +423,33 @@
       .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  /* ══════════════ BOOT ══════════════ */
+  /* MOBILE SIDEBAR */
+  const adminHamburger = document.getElementById('admin-hamburger');
+  const sidebar        = document.querySelector('.sidebar');
+  const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+  if (adminHamburger) {
+    adminHamburger.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      sidebarOverlay.classList.toggle('active');
+    });
+    sidebarOverlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      sidebarOverlay.classList.remove('active');
+    });
+    navItems.forEach(btn => {
+      btn.addEventListener('click', () => {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('active');
+      });
+    });
+  }
+
+  /* BOOT */
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
     document.getElementById('view-products').style.display = 'flex';
     checkAuth();
   });
+
 })();
