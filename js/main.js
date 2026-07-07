@@ -122,7 +122,7 @@
     const images = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
     const mainImg = images[0] || JazoAPI.placeholderSVG();
 
-    const thumbsHTML = images.length > 1 ? `
+    const thumbsHTML = images.length > 0 ? `
       <div class="pp-thumbs">
         ${images.map((src, i) => `<div class="pp-thumb ${i === 0 ? 'active' : ''}" data-src="${src}">
           <img src="${src}" alt="" onerror="this.src='${JazoAPI.placeholderSVG()}'" />
@@ -158,7 +158,16 @@
     /* thumb clicks */
     productPageInner.querySelectorAll('.pp-thumb').forEach(thumb => {
       thumb.addEventListener('click', () => {
-        document.getElementById('pp-main-img').src = thumb.dataset.src;
+        const mainImg = document.getElementById('pp-main-img');
+        if (mainImg) mainImg.src = thumb.dataset.src;
+        productPageInner.querySelectorAll('.pp-thumb').forEach(t => t.classList.remove('active'));
+        thumb.classList.add('active');
+      });
+      /* mobile touch support */
+      thumb.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        const mainImg = document.getElementById('pp-main-img');
+        if (mainImg) mainImg.src = thumb.dataset.src;
         productPageInner.querySelectorAll('.pp-thumb').forEach(t => t.classList.remove('active'));
         thumb.classList.add('active');
       });

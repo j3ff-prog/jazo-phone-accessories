@@ -318,7 +318,7 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
 /* ─── Product Page (full page overlay) ─── */
 .product-page-overlay {
   position: fixed; inset: 0; background: var(--bg); z-index: 400;
-  overflow-y: auto; display: none;
+  overflow-y: auto; overflow-x: hidden; display: none;
 }
 .product-page-overlay.active { display: block; }
 .product-page { max-width: 1000px; margin: 0 auto; padding: 24px 24px 60px; }
@@ -331,16 +331,20 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
 .product-page-back:hover { color: var(--teal); }
 
 .product-page-inner { display: grid; grid-template-columns: 420px 1fr; gap: 40px; align-items: start; max-width: 860px; }
-.pp-gallery { display: flex; flex-direction: column; gap: 10px; }
-.pp-main-img { aspect-ratio: 1; border-radius: var(--radius-lg); overflow: hidden; background: #f1f5f9; }
+.pp-gallery { display: flex; flex-direction: column; gap: 10px; max-width: 400px; width: 100%; }
+.pp-main-img { width: 100%; max-width: 400px; aspect-ratio: 1; border-radius: var(--radius-lg); overflow: hidden; background: #f1f5f9; }
 .pp-main-img img { width: 100%; height: 100%; object-fit: cover; }
 .pp-thumbs {
   display: flex;
   gap: 8px;
   overflow-x: auto;
+  overflow-y: visible;
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
-  padding-bottom: 4px;
+  padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  max-width: 400px;
 }
 .pp-thumbs::-webkit-scrollbar { height: 4px; }
 .pp-thumbs::-webkit-scrollbar-track { background: transparent; }
