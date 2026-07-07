@@ -330,13 +330,22 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
 }
 .product-page-back:hover { color: var(--teal); }
 
-.product-page-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+.product-page-inner { display: grid; grid-template-columns: 420px 1fr; gap: 40px; align-items: start; max-width: 860px; }
 .pp-gallery { display: flex; flex-direction: column; gap: 10px; }
 .pp-main-img { aspect-ratio: 1; border-radius: var(--radius-lg); overflow: hidden; background: #f1f5f9; }
 .pp-main-img img { width: 100%; height: 100%; object-fit: cover; }
-.pp-thumbs { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
-.pp-thumbs::-webkit-scrollbar { display: none; }
-.pp-thumb { width: 64px; height: 64px; flex-shrink: 0; border-radius: var(--radius); overflow: hidden; background: #f1f5f9; border: 2px solid transparent; cursor: pointer; opacity: 0.6; transition: opacity 0.15s, border-color 0.15s; }
+.pp-thumbs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  padding-bottom: 4px;
+}
+.pp-thumbs::-webkit-scrollbar { height: 4px; }
+.pp-thumbs::-webkit-scrollbar-track { background: transparent; }
+.pp-thumbs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.pp-thumb { width: 64px; height: 64px; flex-shrink: 0; border-radius: var(--radius); overflow: hidden; background: #f1f5f9; border: 2px solid transparent; cursor: pointer; opacity: 0.65; transition: opacity 0.15s, border-color 0.15s; }
 .pp-thumb.active, .pp-thumb:hover { opacity: 1; border-color: var(--teal); }
 .pp-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
