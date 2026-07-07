@@ -1,0 +1,11 @@
+{
+  "name": "rozina-signature-living",
+  "version": "1.0.0",
+  "description": "Rozina Signature Living - E-commerce website",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0"
+  }
+}
