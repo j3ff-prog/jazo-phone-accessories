@@ -297,7 +297,7 @@
       cart = []; saveCart(); renderCart(); closeCheckout();
       allProducts = await JazoAPI.getProducts(); applyFilters();
 
-      const WHATSAPP_NUMBER = '254700000000';
+      const WHATSAPP_NUMBER = '254720663044';
       const itemsText = order.items.map(i => `• ${i.name} x${i.qty} — ${JazoAPI.formatPrice(i.price * i.qty)}`).join('\n');
       const waMsg = encodeURIComponent(`Hello Jazo Phone Accessories,\n\nOrder Confirmation:\nOrder ID: ${order.id}\nName: ${name}\n\nItems:\n${itemsText}\n\nTotal: ${JazoAPI.formatPrice(order.total)}\n\nPlease confirm and advise on delivery.`);
 
