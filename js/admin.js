@@ -201,24 +201,67 @@
       const date = new Date(o.created_at).toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
       const statusClass = o.status === 'delivered' ? 'status-done' : o.status === 'cancelled' ? 'status-cancel' : 'status-pending';
 
-      return `<tr>
-        <td><strong>${esc(o.id)}</strong></td>
-        <td>${esc(o.customer.name)}<br><small>${esc(o.customer.phone)}</small></td>
-        <td>${o.items.map(i => `${esc(i.name)} x${i.qty}`).join('<br>')}</td>
-        <td>${JazoAPI.formatPrice(o.total)}</td>
-        <td><span class="order-status ${statusClass}">${esc(o.status)}</span></td>
-        <td>${date}</td>
-        <td>
-          <select class="status-select admin-select" data-id="${o.id}">
-            <option value="pending"   ${o.status==='pending'   ?'selected':''}>Pending</option>
-            <option value="confirmed" ${o.status==='confirmed' ?'selected':''}>Confirmed</option>
-            <option value="delivered" ${o.status==='delivered' ?'selected':''}>Delivered</option>
-            <option value="cancelled" ${o.status==='cancelled' ?'selected':''}>Cancelled</option>
-          </select>
-        </td>
-      </tr>`;
+      return `
+        <tr class="order-row" data-order-id="${esc(o.id)}">
+          <td><strong>${esc(o.id)}</strong></td>
+          <td>${esc(o.customer.name)}<br><small>${esc(o.customer.phone)}</small></td>
+          <td>${o.items.map(i => `${esc(i.name)} x${i.qty}`).join('<br>')}</td>
+          <td>${JazoAPI.formatPrice(o.total)}</td>
+          <td><span class="order-status ${statusClass}">${esc(o.status)}</span></td>
+          <td>${date}</td>
+          <td>
+            <select class="status-select admin-select" data-id="${o.id}">
+              <option value="pending"   ${o.status==='pending'   ?'selected':''}>Pending</option>
+              <option value="confirmed" ${o.status==='confirmed' ?'selected':''}>Confirmed</option>
+              <option value="delivered" ${o.status==='delivered' ?'selected':''}>Delivered</option>
+              <option value="cancelled" ${o.status==='cancelled' ?'selected':''}>Cancelled</option>
+            </select>
+          </td>
+        </tr>
+        <tr class="order-detail-row" data-detail-for="${esc(o.id)}">
+          <td colspan="7">
+            <div class="order-detail-panel" id="detail-${esc(o.id)}">
+              <div class="order-detail-col">
+                <span class="order-detail-label">Full Name</span>
+                <span class="order-detail-value">${esc(o.customer.name)}</span>
+              </div>
+              <div class="order-detail-col">
+                <span class="order-detail-label">Phone</span>
+                <span class="order-detail-value">${esc(o.customer.phone)}</span>
+              </div>
+              <div class="order-detail-col">
+                <span class="order-detail-label">Delivery Address</span>
+                <span class="order-detail-value">${esc(o.customer.address || '—')}</span>
+              </div>
+              <div class="order-detail-col">
+                <span class="order-detail-label">Note</span>
+                <span class="order-detail-value ${o.customer.note ? '' : 'empty'}">${esc(o.customer.note || 'No note')}</span>
+              </div>
+            </div>
+          </td>
+        </tr>`;
     }).join('');
 
+    // Toggle detail panel on row click
+    ordersTbody.querySelectorAll('.order-row').forEach(row => {
+      row.addEventListener('click', (e) => {
+        // Don't toggle when clicking the status dropdown
+        if (e.target.closest('select')) return;
+        const orderId = row.dataset.orderId;
+        const panel = document.getElementById('detail-' + orderId);
+        const isOpen = panel.classList.contains('open');
+        // Close all panels first
+        ordersTbody.querySelectorAll('.order-detail-panel').forEach(p => p.classList.remove('open'));
+        ordersTbody.querySelectorAll('.order-row').forEach(r => r.classList.remove('expanded'));
+        // Open this one if it was closed
+        if (!isOpen) {
+          panel.classList.add('open');
+          row.classList.add('expanded');
+        }
+      });
+    });
+
+    // Status dropdown change
     ordersTbody.querySelectorAll('.status-select').forEach(sel => {
       sel.addEventListener('change', async () => {
         try {
@@ -231,7 +274,6 @@
       });
     });
   }
-
   /* PRODUCT FORM */
   function resetForm() {
     editingId    = null;
