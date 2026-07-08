@@ -177,13 +177,11 @@
     document.getElementById('pp-back-btn').addEventListener('click', closeProductPage);
 
     productPageOverlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
     productPageOverlay.scrollTo(0, 0);
   }
 
   function closeProductPage() {
     productPageOverlay.classList.remove('active');
-    document.body.style.overflow = '';
   }
 
   /* ══ CART ══ */
