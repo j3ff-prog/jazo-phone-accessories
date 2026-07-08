@@ -21,7 +21,11 @@ module.exports = async (req, res) => {
 
   /* ── PUT /api/products/:id ── */
   if (req.method === 'PUT') {
-    const { name, category, description, price, old_price, stock, image, featured, is_new } = req.body;
+    const { name, category, description, price, old_price, stock, image, images, featured, is_new } = req.body;
+
+    // Resolve images array and primary image consistently
+    const imagesArr = Array.isArray(images) && images.length ? images : (image ? [image] : []);
+    const primaryImage = imagesArr[0] || '';
 
     const updates = {};
     if (name        !== undefined) updates.name        = name.trim();
@@ -30,7 +34,8 @@ module.exports = async (req, res) => {
     if (price       !== undefined) updates.price       = Number(price);
     if (old_price   !== undefined) updates.old_price   = old_price ? Number(old_price) : null;
     if (stock       !== undefined) updates.stock       = Number(stock);
-    if (image       !== undefined) updates.image       = image;
+    if (image       !== undefined) updates.image       = primaryImage;
+    if (images      !== undefined) updates.images      = imagesArr;
     if (featured    !== undefined) updates.featured    = Boolean(featured);
     if (is_new      !== undefined) updates.is_new      = Boolean(is_new);
     updates.updated_at = new Date().toISOString();
@@ -48,11 +53,24 @@ module.exports = async (req, res) => {
 
   /* ── DELETE /api/products/:id ── */
   if (req.method === 'DELETE') {
-    // also delete image from storage if it's a Supabase storage URL
-    const { data: product } = await supabase.from('products').select('image').eq('id', id).single();
-    if (product?.image && product.image.includes('/storage/v1/object/')) {
-      const path = product.image.split('/product-images/')[1];
-      if (path) await supabase.storage.from('product-images').remove([path]);
+    // Delete all images from Supabase Storage, not just the primary one
+    const { data: product } = await supabase.from('products').select('image, images').eq('id', id).single();
+
+    if (product) {
+      // Collect all image URLs (images array + fallback to image field)
+      const allUrls = Array.isArray(product.images) && product.images.length
+        ? product.images
+        : (product.image ? [product.image] : []);
+
+      // Extract storage paths and delete them all
+      const paths = allUrls
+        .filter(url => url && url.includes('/storage/v1/object/'))
+        .map(url => url.split('/product-images/')[1])
+        .filter(Boolean);
+
+      if (paths.length) {
+        await supabase.storage.from('product-images').remove(paths);
+      }
     }
 
     const { error } = await supabase.from('products').delete().eq('id', id);

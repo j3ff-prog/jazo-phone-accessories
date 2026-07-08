@@ -2,7 +2,6 @@
 const supabase = require('./_supabase');
 
 module.exports = async (req, res) => {
-  // CORS preflight
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   /* ── GET /api/products ── */
@@ -23,11 +22,15 @@ module.exports = async (req, res) => {
 
   /* ── POST /api/products ── */
   if (req.method === 'POST') {
-    const { name, category, description, price, old_price, stock, image, featured, is_new } = req.body;
+    const { name, category, description, price, old_price, stock, image, images, featured, is_new } = req.body;
 
     if (!name || !category || !description || price === undefined || stock === undefined) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
+
+    // Resolve images array and primary image consistently
+    const imagesArr = Array.isArray(images) && images.length ? images : (image ? [image] : []);
+    const primaryImage = imagesArr[0] || '';
 
     const { data, error } = await supabase
       .from('products')
@@ -38,7 +41,8 @@ module.exports = async (req, res) => {
         price:       Number(price),
         old_price:   old_price ? Number(old_price) : null,
         stock:       Number(stock),
-        image:       image || '',
+        image:       primaryImage,
+        images:      imagesArr,
         featured:    Boolean(featured),
         is_new:      is_new !== undefined ? Boolean(is_new) : true,
       }])
