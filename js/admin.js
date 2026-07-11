@@ -15,6 +15,7 @@
   let allProducts    = [];
   let allOrders      = [];
   let pendingFiles   = [];
+  let pendingExisting = [];  // existing image URLs when editing
   let toastTimer;
 
   const loginScreen  = document.getElementById('login-screen');
@@ -278,6 +279,7 @@
   function resetForm() {
     editingId    = null;
     pendingFiles = [];
+    pendingExisting = [];
     productForm.reset();
     editIdField.value     = '';
     formTitle.textContent = 'Add Product';
@@ -285,6 +287,7 @@
     cancelEdit.style.display = 'none';
     formError.textContent = '';
     renderImageGrid();
+  
   }
 
   function startEdit(id) {
@@ -292,7 +295,7 @@
     if (!p) return;
     editingId    = id;
     pendingFiles = [];
-
+    pendingExisting = (p.images && p.images.length) ? [...p.images] : (p.image ? [p.image] : []);
     formTitle.textContent    = 'Edit Product';
     submitBtn.textContent    = 'Save Changes';
     cancelEdit.style.display = 'inline-flex';
@@ -307,6 +310,27 @@
     pNew.checked      = p.is_new;
     formError.textContent = '';
     renderImageGrid();
+   
+    // Show existing images as previews
+    const existingImages = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
+    existingImages.forEach(url => {
+      const wrap = document.createElement('div');
+      wrap.className = 'img-thumb-wrap';
+      const img = document.createElement('img');
+      img.src = url;
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'img-thumb-remove';
+      removeBtn.type = 'button';
+      removeBtn.innerHTML = '&times;';
+      removeBtn.addEventListener('click', () => {
+        wrap.remove();
+        // also remove from pendingExisting
+        pendingExisting = pendingExisting.filter(u => u !== url);
+      });
+      wrap.appendChild(img);
+      wrap.appendChild(removeBtn);
+      imgUploadGrid.insertBefore(wrap, imgAddBtn);
+    });
 
     navItems.forEach(b => b.classList.remove('active'));
     document.querySelector('[data-view="add"]').classList.add('active');
@@ -344,14 +368,8 @@
       }
 
       // Editing with no new images — keep existing ones
-      if (!imageUrls.length && editingId) {
-        const existing = allProducts.find(p => p.id === editingId);
-        if (existing) {
-          imageUrls = (existing.images && existing.images.length)
-            ? existing.images
-            : (existing.image ? [existing.image] : []);
-        }
-      }
+      // Combine kept existing images with any new uploads
+      imageUrls = [...pendingExisting, ...imageUrls];
 
       const payload = {
         name:        pName.value.trim(),
