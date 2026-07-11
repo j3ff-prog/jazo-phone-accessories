@@ -412,3 +412,33 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
   .cat-card-icon { font-size: 16px; }
   .pp-thumb { width: 52px; height: 52px; }
 }
+/* ─── Brand Strip ─── */
+.brand-strip {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+}
+.brand-pills {
+  display: flex;
+  gap: 6px;
+  padding: 12px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.brand-pills::-webkit-scrollbar { display: none; }
+.brand-pill {
+  padding: 6px 18px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--mid);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: var(--transition);
+  font-family: var(--font);
+}
+.brand-pill:hover { border-color: var(--teal); color: var(--teal); }
+.brand-pill.active { background: var(--navy); color: #fff; border-color: var(--navy); }

@@ -6,7 +6,7 @@
   'use strict';
 
   let allProducts = [], filteredProducts = [];
-  let activeCategory = 'all', activeSort = 'newest';
+  let activeCategory = 'all', activeSort = 'newest', activeBrand = 'all';
   let cart = loadCart();
   let searchTimeout, toastTimer;
 
@@ -58,10 +58,14 @@
   function applyFilters() {
     let list = [...allProducts];
     if (activeCategory !== 'all') list = list.filter(p => p.category === activeCategory);
-    switch (activeSort) {
-      case 'price-asc':  list.sort((a, b) => a.price - b.price); break;
-      case 'price-desc': list.sort((a, b) => b.price - a.price); break;
-      default:           list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    if (activeBrand !== 'all') {
+      list = list.filter(p => {
+        const name = p.name.toLowerCase() + ' ' + (p.description || '').toLowerCase();
+        if (activeBrand === 'samsung') return name.includes('samsung');
+        if (activeBrand === 'iphone') return name.includes('iphone') || name.includes('apple');
+        if (activeBrand === 'other') return !name.includes('samsung') && !name.includes('iphone') && !name.includes('apple');
+        return true;
+      });
     }
     filteredProducts = list;
     renderGrid();
@@ -366,6 +370,14 @@
       });
     });
     sortSelect.addEventListener('change', () => { activeSort = sortSelect.value; applyFilters(); });
+    document.querySelectorAll('.brand-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.brand-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeBrand = btn.dataset.brand;
+        applyFilters();
+      });
+    });
     searchInput.addEventListener('input', e => handleSearch(e.target.value));
     document.addEventListener('click', e => { if (!e.target.closest('.search-wrap')) searchResults.classList.remove('active'); });
     cartBtn.addEventListener('click', openCart);
