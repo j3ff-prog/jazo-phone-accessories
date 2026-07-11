@@ -148,7 +148,7 @@
           ${p.old_price ? `<span class="pp-old">${JazoAPI.formatPrice(p.old_price)}</span>` : ''}
         </div>
         ${stockLabel}
-        <p class="pp-desc">${esc(p.description)}</p>
+        <p class="pp-desc">${esc(p.description).replace(/\n/g, '<br>').replace(/(\d+\.)/g, '<br>$1')}</p>
         <div class="pp-actions">
           <button class="btn btn-primary" id="pp-cart-btn" ${p.stock === 0 ? 'disabled' : ''}>Add to Cart</button>
           <button class="btn btn-ghost" id="pp-back-btn">Back to Shop</button>

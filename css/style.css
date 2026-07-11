@@ -312,6 +312,7 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
 .pp-price { font-size: 22px; font-weight: 700; color: var(--navy); }
 .pp-old { font-size: 14px; color: var(--muted); text-decoration: line-through; }
 .pp-desc { font-size: 14px; color: var(--mid); line-height: 1.75; border-top: 1px solid var(--border); padding-top: 14px; }
+.pp-desc br { display: block; margin-bottom: 6px; }
 .pp-stock { font-size: 13px; font-weight: 500; }
 .pp-stock.in { color: #059669; }
 .pp-stock.out { color: #dc2626; }
