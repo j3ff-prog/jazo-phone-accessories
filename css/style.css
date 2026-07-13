@@ -53,10 +53,10 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
 .site-header { position: sticky; top: 0; z-index: 100; background: var(--navy); border-bottom: 1px solid rgba(255,255,255,0.06); }
 .header-inner { max-width: 1180px; margin: 0 auto; padding: 0 24px; height: 62px; display: flex; align-items: center; gap: 28px; }
 .logo-link { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
-.logo-img { width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 2px solid var(--teal); }
+.logo-img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; border: 2px solid var(--teal); }
 .logo-text { display: flex; flex-direction: column; line-height: 1.1; }
-.logo-name { font-size: 16px; font-weight: 700; color: #fff; letter-spacing: 0.02em; }
-.logo-sub { font-size: 9px; font-weight: 500; color: var(--teal-light); letter-spacing: 0.09em; text-transform: uppercase; }
+.logo-name { font-size: 19px; font-weight: 700; color: #fff; letter-spacing: 0.02em; }
+.logo-sub { font-size: 10px; font-weight: 500; color: var(--teal-light); letter-spacing: 0.09em; text-transform: uppercase; }
 .main-nav { display: flex; align-items: center; gap: 24px; flex: 1; }
 .main-nav a { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.6); transition: color var(--transition); }
 .main-nav a:hover { color: #fff; }
