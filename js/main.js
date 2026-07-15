@@ -60,10 +60,9 @@
     if (activeCategory !== 'all') list = list.filter(p => p.category === activeCategory);
     if (activeBrand !== 'all') {
       list = list.filter(p => {
-        const name = p.name.toLowerCase() + ' ' + (p.description || '').toLowerCase();
-        if (activeBrand === 'samsung') return name.includes('samsung');
-        if (activeBrand === 'iphone') return name.includes('iphone') || name.includes('apple');
-        if (activeBrand === 'other') return !name.includes('samsung') && !name.includes('iphone') && !name.includes('apple');
+        if (activeBrand === 'samsung') return p.brand === 'samsung';
+        if (activeBrand === 'iphone') return p.brand === 'iphone';
+        if (activeBrand === 'other') return !p.brand || (p.brand !== 'samsung' && p.brand !== 'iphone');
         return true;
       });
     }
