@@ -165,14 +165,15 @@
           </div>
           <p class="pp-variant-error" id="pp-variant-error" style="display:none;">Please select a model</p>
         </div>` : ''}
-        ${p.color_options && p.color_options.length ? `
-        <div class="pp-variants">
+
+
+       <div class="pp-variants">
           <p class="pp-variant-label">Select Color <span class="pp-variant-req">*</span></p>
           <div class="pp-variant-btns" id="pp-color-btns">
-            ${p.color_options.map(c => `<button class="variant-btn" data-color="${c}">${c}</button>`).join('')}
+            ${['Black', 'Blue', 'Grey', 'Clear', 'Red', 'Green', 'Purple', 'Gold'].map(c => `<button class="variant-btn" data-color="${c}">${c}</button>`).join('')}
           </div>
           <p class="pp-variant-error" id="pp-color-error" style="display:none;">Please select a color</p>
-        </div>` : ''}
+        </div>
         <div class="pp-actions">
           <button class="btn btn-primary" id="pp-cart-btn" ${p.stock === 0 ? 'disabled' : ''}>Add to Cart</button>
           <button class="btn btn-ghost" id="pp-back-btn">Back to Shop</button>
