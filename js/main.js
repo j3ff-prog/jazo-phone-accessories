@@ -66,6 +66,11 @@
         return true;
       });
     }
+    switch (activeSort) {
+      case 'price-asc':  list.sort((a, b) => a.price - b.price); break;
+      case 'price-desc': list.sort((a, b) => b.price - a.price); break;
+      default:           list.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
     filteredProducts = list;
     renderGrid();
   }
@@ -155,10 +160,18 @@
         ${p.model_options && p.model_options.length ? `
         <div class="pp-variants">
           <p class="pp-variant-label">Select Model <span class="pp-variant-req">*</span></p>
-          <div class="pp-variant-btns">
+          <div class="pp-variant-btns" id="pp-model-btns">
             ${p.model_options.map(m => `<button class="variant-btn" data-model="${m}">${m}</button>`).join('')}
           </div>
           <p class="pp-variant-error" id="pp-variant-error" style="display:none;">Please select a model</p>
+        </div>` : ''}
+        ${p.color_options && p.color_options.length ? `
+        <div class="pp-variants">
+          <p class="pp-variant-label">Select Color <span class="pp-variant-req">*</span></p>
+          <div class="pp-variant-btns" id="pp-color-btns">
+            ${p.color_options.map(c => `<button class="variant-btn" data-color="${c}">${c}</button>`).join('')}
+          </div>
+          <p class="pp-variant-error" id="pp-color-error" style="display:none;">Please select a color</p>
         </div>` : ''}
         <div class="pp-actions">
           <button class="btn btn-primary" id="pp-cart-btn" ${p.stock === 0 ? 'disabled' : ''}>Add to Cart</button>
@@ -169,40 +182,60 @@
     /* thumb clicks */
     productPageInner.querySelectorAll('.pp-thumb').forEach(thumb => {
       thumb.addEventListener('click', () => {
-        const mainImg = document.getElementById('pp-main-img');
-        if (mainImg) mainImg.src = thumb.dataset.src;
+        const mainImgEl = document.getElementById('pp-main-img');
+        if (mainImgEl) mainImgEl.src = thumb.dataset.src;
         productPageInner.querySelectorAll('.pp-thumb').forEach(t => t.classList.remove('active'));
         thumb.classList.add('active');
       });
-      /* mobile touch support */
       thumb.addEventListener('touchend', (e) => {
         e.preventDefault();
-        const mainImg = document.getElementById('pp-main-img');
-        if (mainImg) mainImg.src = thumb.dataset.src;
+        const mainImgEl = document.getElementById('pp-main-img');
+        if (mainImgEl) mainImgEl.src = thumb.dataset.src;
         productPageInner.querySelectorAll('.pp-thumb').forEach(t => t.classList.remove('active'));
         thumb.classList.add('active');
       });
     });
-    /* variant selection */
+
+    /* model selection */
     let selectedModel = null;
-    productPageInner.querySelectorAll('.variant-btn').forEach(btn => {
+    productPageInner.querySelectorAll('#pp-model-btns .variant-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        productPageInner.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('selected'));
+        productPageInner.querySelectorAll('#pp-model-btns .variant-btn').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
         selectedModel = btn.dataset.model;
         const errEl = document.getElementById('pp-variant-error');
         if (errEl) errEl.style.display = 'none';
       });
     });
+
+    /* color selection */
+    let selectedColor = null;
+    productPageInner.querySelectorAll('#pp-color-btns .variant-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        productPageInner.querySelectorAll('#pp-color-btns .variant-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedColor = btn.dataset.color;
+        const errEl = document.getElementById('pp-color-error');
+        if (errEl) errEl.style.display = 'none';
+      });
+    });
+
+    /* add to cart button */
     document.getElementById('pp-cart-btn').addEventListener('click', () => {
       if (p.model_options && p.model_options.length && !selectedModel) {
         const errEl = document.getElementById('pp-variant-error');
         if (errEl) errEl.style.display = 'block';
         return;
       }
-      addToCart(id, selectedModel);
+      if (p.color_options && p.color_options.length && !selectedColor) {
+        const errEl = document.getElementById('pp-color-error');
+        if (errEl) errEl.style.display = 'block';
+        return;
+      }
+      addToCart(id, selectedModel, selectedColor);
       showToast(`${p.name} added to cart`);
     });
+
     document.getElementById('pp-back-btn').addEventListener('click', closeProductPage);
 
     productPageOverlay.classList.add('active');
@@ -220,36 +253,41 @@
   function saveCart() { localStorage.setItem('jazo_cart', JSON.stringify(cart)); }
   function findProduct(id) { return allProducts.find(p => p.id === id) || null; }
 
-  function addToCart(id, model = null) {
+  function addToCart(id, model = null, color = null) {
     const p = findProduct(id);
     if (!p || p.stock === 0) return;
-    const existing = cart.find(i => i.id === id && i.model === model);
+    const existing = cart.find(i => i.id === id && i.model === model && i.color === color);
     if (existing) {
       if (existing.qty < p.stock) existing.qty++;
       else { showToast('Maximum stock reached'); return; }
     } else {
-      cart.push({ id, qty: 1 , model });
+      cart.push({ id, qty: 1, model, color });
     }
     saveCart();
     renderCart();
-    showToast(`${p.name} added to cart`);
   }
 
-  function removeFromCart(id) { cart = cart.filter(i => i.id !== id); saveCart(); renderCart(); }
+  function removeFromCart(id, model, color) {
+    cart = cart.filter(i => !(i.id === id && i.model === model && i.color === color));
+    saveCart();
+    renderCart();
+  }
 
-  function changeQty(id, delta) {
-    const item = cart.find(i => i.id === id);
+  function changeQty(id, model, color, delta) {
+    const item = cart.find(i => i.id === id && i.model === model && i.color === color);
     if (!item) return;
     const p = findProduct(id);
     const newQty = item.qty + delta;
-    if (newQty < 1) { removeFromCart(id); return; }
+    if (newQty < 1) { removeFromCart(id, model, color); return; }
     if (p && newQty > p.stock) { showToast('Maximum stock reached'); return; }
     item.qty = newQty;
     saveCart();
     renderCart();
   }
 
-  function cartTotal() { return cart.reduce((s, i) => { const p = findProduct(i.id); return p ? s + p.price * i.qty : s; }, 0); }
+  function cartTotal() {
+    return cart.reduce((s, i) => { const p = findProduct(i.id); return p ? s + p.price * i.qty : s; }, 0);
+  }
 
   function renderCart() {
     const total = cart.reduce((s, i) => s + i.qty, 0);
@@ -261,28 +299,46 @@
       cartFooter.style.display = 'none';
       return;
     }
-    cartItemsEl.innerHTML = cart.map(item => {
+
+    cartItemsEl.innerHTML = cart.map((item, idx) => {
       const p = findProduct(item.id);
       if (!p) return '';
       const img = (p.images && p.images.length) ? p.images[0] : (p.image || JazoAPI.placeholderSVG());
-      return `<div class="cart-item" data-id="${p.id}">
+      const variantLine = [item.model, item.color].filter(Boolean).map(v => esc(v)).join(' · ');
+      return `<div class="cart-item" data-idx="${idx}">
         <div class="cart-item-img"><img src="${img}" alt="${esc(p.name)}" onerror="this.src='${JazoAPI.placeholderSVG()}'" /></div>
         <div class="cart-item-info">
-          <p class="cart-item-name">${esc(p.name)}${item.model ? `<br><span style="font-size:11px;color:var(--muted);">${esc(item.model)}</span>` : ''}</p>
+          <p class="cart-item-name">${esc(p.name)}${variantLine ? `<br><span style="font-size:11px;color:var(--muted);">${variantLine}</span>` : ''}</p>
           <p class="cart-item-price">${JazoAPI.formatPrice(p.price)}</p>
           <div class="cart-item-qty">
-            <button class="qty-btn" data-action="dec" data-id="${p.id}">−</button>
+            <button class="qty-btn" data-action="dec" data-idx="${idx}">−</button>
             <span class="qty-num">${item.qty}</span>
-            <button class="qty-btn" data-action="inc" data-id="${p.id}">+</button>
+            <button class="qty-btn" data-action="inc" data-idx="${idx}">+</button>
           </div>
         </div>
-        <button class="cart-item-remove" data-id="${p.id}">&times;</button>
+        <button class="cart-item-remove" data-idx="${idx}">&times;</button>
       </div>`;
     }).join('');
+
     cartFooter.style.display = 'flex';
     cartTotalEl.textContent = JazoAPI.formatPrice(cartTotal());
-    cartItemsEl.querySelectorAll('.qty-btn').forEach(btn => btn.addEventListener('click', () => changeQty(btn.dataset.id, btn.dataset.action === 'inc' ? 1 : -1)));
-    cartItemsEl.querySelectorAll('.cart-item-remove').forEach(btn => btn.addEventListener('click', () => removeFromCart(btn.dataset.id)));
+
+    cartItemsEl.querySelectorAll('.qty-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.idx);
+        const item = cart[idx];
+        if (!item) return;
+        changeQty(item.id, item.model, item.color, btn.dataset.action === 'inc' ? 1 : -1);
+      });
+    });
+    cartItemsEl.querySelectorAll('.cart-item-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = Number(btn.dataset.idx);
+        const item = cart[idx];
+        if (!item) return;
+        removeFromCart(item.id, item.model, item.color);
+      });
+    });
   }
 
   function openCart() { cartDrawer.classList.add('open'); cartOverlay.classList.add('active'); document.body.style.overflow = 'hidden'; }
@@ -295,7 +351,11 @@
     document.getElementById('co-summary').innerHTML = cart.map(item => {
       const p = findProduct(item.id);
       if (!p) return '';
-      return `<div class="co-item"><span class="co-item-name">${esc(p.name)} × ${item.qty}</span><span class="co-item-price">${JazoAPI.formatPrice(p.price * item.qty)}</span></div>`;
+      const variantLine = [item.model, item.color].filter(Boolean).join(' · ');
+      return `<div class="co-item">
+        <span class="co-item-name">${esc(p.name)}${variantLine ? ` (${esc(variantLine)})` : ''} × ${item.qty}</span>
+        <span class="co-item-price">${JazoAPI.formatPrice(p.price * item.qty)}</span>
+      </div>`;
     }).join('');
     document.getElementById('co-total').textContent = JazoAPI.formatPrice(cartTotal());
     document.getElementById('checkout-error').textContent = '';
@@ -313,10 +373,10 @@
     e.preventDefault();
     const errEl = document.getElementById('checkout-error');
     errEl.textContent = '';
-    const name = document.getElementById('co-name').value.trim();
-    const phone = document.getElementById('co-phone').value.trim();
+    const name    = document.getElementById('co-name').value.trim();
+    const phone   = document.getElementById('co-phone').value.trim();
     const address = document.getElementById('co-address').value.trim();
-    const note = document.getElementById('co-note').value.trim();
+    const note    = document.getElementById('co-note').value.trim();
     if (!name || !phone || !address) { errEl.textContent = 'Please fill in your name, phone and delivery address.'; return; }
 
     const submitEl = document.getElementById('co-submit');
@@ -325,7 +385,14 @@
 
     const orderItems = cart.map(item => {
       const p = findProduct(item.id);
-      return { productId: item.id, name: p ? p.name : item.id, qty: item.qty, price: p ? p.price : 0, model: item.model || null };
+      return {
+        productId: item.id,
+        name:  p ? p.name : item.id,
+        qty:   item.qty,
+        price: p ? p.price : 0,
+        model: item.model || null,
+        color: item.color || null,
+      };
     });
 
     try {
@@ -334,7 +401,10 @@
       allProducts = await JazoAPI.getProducts(); applyFilters();
 
       const WHATSAPP_NUMBER = '254720663044';
-      const itemsText = order.items.map(i => `• ${i.name} x${i.qty} — ${JazoAPI.formatPrice(i.price * i.qty)}`).join('\n');
+      const itemsText = order.items.map(i => {
+        const variant = [i.model, i.color].filter(Boolean).join(' · ');
+        return `• ${i.name}${variant ? ` (${variant})` : ''} x${i.qty} — ${JazoAPI.formatPrice(i.price * i.qty)}`;
+      }).join('\n');
       const waMsg = encodeURIComponent(`Hello Jazo Phone Accessories,\n\nOrder Confirmation:\nOrder ID: ${order.id}\nName: ${name}\n\nItems:\n${itemsText}\n\nTotal: ${JazoAPI.formatPrice(order.total)}\n\nPlease confirm and advise on delivery.`);
 
       document.getElementById('conf-name').textContent = name;
@@ -394,7 +464,9 @@
         document.getElementById('shop').scrollIntoView({ behavior: 'smooth' });
       });
     });
+
     sortSelect.addEventListener('change', () => { activeSort = sortSelect.value; applyFilters(); });
+
     document.querySelectorAll('.brand-pill').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.brand-pill').forEach(b => b.classList.remove('active'));
@@ -403,6 +475,7 @@
         applyFilters();
       });
     });
+
     searchInput.addEventListener('input', e => handleSearch(e.target.value));
     document.addEventListener('click', e => { if (!e.target.closest('.search-wrap')) searchResults.classList.remove('active'); });
     cartBtn.addEventListener('click', openCart);

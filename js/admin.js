@@ -65,6 +65,7 @@
   const delCancel    = document.getElementById('del-cancel');
   const ordersTbody  = document.getElementById('orders-tbody');
   const ordersEmpty  = document.getElementById('orders-empty');
+  const pColors = document.getElementById('p-colors');
 
   /* ══ AUTH ══ */
   function checkAuth() {
@@ -309,6 +310,7 @@
     cancelEdit.style.display = 'none';
     formError.textContent = '';
     pBrand.value = '';
+    pColors.value = '';
     renderModelGrid('');
     renderImageGrid();
   }
@@ -333,6 +335,7 @@
     pFeatured.checked = p.featured;
     pNew.checked      = p.is_new;
     pBrand.value      = p.brand || '';
+    pColors.value = (p.color_options && p.color_options.length) ? p.color_options.join(', ') : '';
     renderModelGrid(p.brand || '', p.model_options || []);
     formError.textContent = '';
     renderImageGrid();
@@ -409,6 +412,9 @@
         images:        imageUrls,
         brand:         pBrand.value || '',
         model_options: selectedModels,
+        color_options: pColors.value.trim()
+        ? pColors.value.split(',').map(c => c.trim()).filter(Boolean)
+        : [],
       };
 
       if (editingId) {
