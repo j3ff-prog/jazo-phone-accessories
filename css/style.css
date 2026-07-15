@@ -442,3 +442,23 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
 }
 .brand-pill:hover { border-color: var(--teal); color: var(--teal); }
 .brand-pill.active { background: var(--navy); color: #fff; border-color: var(--navy); }
+/* ─── Product Variants ─── */
+.pp-variants { display: flex; flex-direction: column; gap: 8px; }
+.pp-variant-label { font-size: 13px; font-weight: 600; color: var(--navy); }
+.pp-variant-req { color: var(--teal); }
+.pp-variant-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.variant-btn {
+  padding: 7px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--mid);
+  background: var(--white);
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: var(--font);
+}
+.variant-btn:hover { border-color: var(--teal); color: var(--teal); }
+.variant-btn.selected { border-color: var(--teal); background: var(--teal); color: #fff; }
+.pp-variant-error { font-size: 12px; color: #dc2626; margin-top: 2px; }

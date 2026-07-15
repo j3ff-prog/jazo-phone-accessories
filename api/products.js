@@ -22,7 +22,7 @@ module.exports = async (req, res) => {
 
   /* ── POST /api/products ── */
   if (req.method === 'POST') {
-    const { name, category, description, price, old_price, stock, image, images, featured, is_new } = req.body;
+    const { name, category, description, price, old_price, stock, image, images, featured, is_new, brand, model_options } = req.body;
 
     if (!name || !category || !description || price === undefined || stock === undefined) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -45,6 +45,8 @@ module.exports = async (req, res) => {
         images:      imagesArr,
         featured:    Boolean(featured),
         is_new:      is_new !== undefined ? Boolean(is_new) : true,
+        brand:       brand || '',
+        model_options: model_options || [],
       }])
       .select()
       .single();

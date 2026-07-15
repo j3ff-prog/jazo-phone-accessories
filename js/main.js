@@ -153,6 +153,14 @@
         </div>
         ${stockLabel}
         <p class="pp-desc">${esc(p.description).replace(/\n/g, '<br>').replace(/(\d+\.)/g, '<br>$1')}</p>
+        ${p.model_options && p.model_options.length ? `
+        <div class="pp-variants">
+          <p class="pp-variant-label">Select Model <span class="pp-variant-req">*</span></p>
+          <div class="pp-variant-btns">
+            ${p.model_options.map(m => `<button class="variant-btn" data-model="${m}">${m}</button>`).join('')}
+          </div>
+          <p class="pp-variant-error" id="pp-variant-error" style="display:none;">Please select a model</p>
+        </div>` : ''}
         <div class="pp-actions">
           <button class="btn btn-primary" id="pp-cart-btn" ${p.stock === 0 ? 'disabled' : ''}>Add to Cart</button>
           <button class="btn btn-ghost" id="pp-back-btn">Back to Shop</button>
@@ -176,8 +184,26 @@
         thumb.classList.add('active');
       });
     });
-
-    document.getElementById('pp-cart-btn').addEventListener('click', () => { addToCart(id); showToast(`${p.name} added to cart`); });
+    /* variant selection */
+    let selectedModel = null;
+    productPageInner.querySelectorAll('.variant-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        productPageInner.querySelectorAll('.variant-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        selectedModel = btn.dataset.model;
+        const errEl = document.getElementById('pp-variant-error');
+        if (errEl) errEl.style.display = 'none';
+      });
+    });
+    document.getElementById('pp-cart-btn').addEventListener('click', () => {
+      if (p.model_options && p.model_options.length && !selectedModel) {
+        const errEl = document.getElementById('pp-variant-error');
+        if (errEl) errEl.style.display = 'block';
+        return;
+      }
+      addToCart(id, selectedModel);
+      showToast(`${p.name} added to cart`);
+    });
     document.getElementById('pp-back-btn').addEventListener('click', closeProductPage);
 
     productPageOverlay.classList.add('active');
@@ -195,15 +221,15 @@
   function saveCart() { localStorage.setItem('jazo_cart', JSON.stringify(cart)); }
   function findProduct(id) { return allProducts.find(p => p.id === id) || null; }
 
-  function addToCart(id) {
+  function addToCart(id, model = null) {
     const p = findProduct(id);
     if (!p || p.stock === 0) return;
-    const existing = cart.find(i => i.id === id);
+    const existing = cart.find(i => i.id === id && i.model === model);
     if (existing) {
       if (existing.qty < p.stock) existing.qty++;
       else { showToast('Maximum stock reached'); return; }
     } else {
-      cart.push({ id, qty: 1 });
+      cart.push({ id, qty: 1 , model });
     }
     saveCart();
     renderCart();
@@ -243,7 +269,7 @@
       return `<div class="cart-item" data-id="${p.id}">
         <div class="cart-item-img"><img src="${img}" alt="${esc(p.name)}" onerror="this.src='${JazoAPI.placeholderSVG()}'" /></div>
         <div class="cart-item-info">
-          <p class="cart-item-name">${esc(p.name)}</p>
+          <p class="cart-item-name">${esc(p.name)}${item.model ? `<br><span style="font-size:11px;color:var(--muted);">${esc(item.model)}</span>` : ''}</p>
           <p class="cart-item-price">${JazoAPI.formatPrice(p.price)}</p>
           <div class="cart-item-qty">
             <button class="qty-btn" data-action="dec" data-id="${p.id}">−</button>
@@ -300,7 +326,7 @@
 
     const orderItems = cart.map(item => {
       const p = findProduct(item.id);
-      return { productId: item.id, name: p ? p.name : item.id, qty: item.qty, price: p ? p.price : 0 };
+      return { productId: item.id, name: p ? p.name : item.id, qty: item.qty, price: p ? p.price : 0, model: item.model || null };
     });
 
     try {

@@ -21,7 +21,7 @@ module.exports = async (req, res) => {
 
   /* ── PUT /api/products/:id ── */
   if (req.method === 'PUT') {
-    const { name, category, description, price, old_price, stock, image, images, featured, is_new } = req.body;
+    const { name, category, description, price, old_price, stock, image, images, featured, is_new, brand, model_options } = req.body;
 
     // Resolve images array and primary image consistently
     const imagesArr = Array.isArray(images) && images.length ? images : (image ? [image] : []);
@@ -38,6 +38,8 @@ module.exports = async (req, res) => {
     if (images      !== undefined) updates.images      = imagesArr;
     if (featured    !== undefined) updates.featured    = Boolean(featured);
     if (is_new      !== undefined) updates.is_new      = Boolean(is_new);
+    if (brand       !== undefined) updates.brand         = brand;
+    if (model_options !== undefined) updates.model_options = model_options;
     updates.updated_at = new Date().toISOString();
 
     const { data, error } = await supabase

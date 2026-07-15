@@ -169,6 +169,24 @@
             <p class="img-hint">Click to browse. You can select multiple images at once.</p>
           </div>
           <div class="form-section">
+            <h3>Compatible Brand</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="p-brand">Brand</label>
+                <select id="p-brand">
+                  <option value="">No specific brand</option>
+                  <option value="iphone">iPhone</option>
+                  <option value="samsung">Samsung</option>
+                </select>
+              </div>
+            </div>
+            <div id="model-checkboxes" style="display:none;">
+              <label style="font-size:13px;font-weight:500;color:var(--charcoal);margin-bottom:8px;display:block;">Select compatible models</label>
+              <div class="model-grid" id="model-grid"></div>
+            </div>
+          </div>
+
+          <div class="form-section">
             <h3>Options</h3>
             <div class="form-row">
               <div class="form-group checkbox-group">

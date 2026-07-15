@@ -8,14 +8,19 @@
   const CREDS    = { user: 'admin', pass: 'jazo2025' };
   const AUTH_KEY = 'jazo_auth';
 
-  let editingId      = null;
-  let deleteTarget   = null;
-  let adminSearch    = '';
-  let adminCatFilter = 'all';
-  let allProducts    = [];
-  let allOrders      = [];
-  let pendingFiles   = [];
-  let pendingExisting = [];  // existing image URLs when editing
+  const MODELS = {
+    iphone:  ['13 Pro Max', '14 Pro Max', '15 Pro Max', '16 Pro Max', '17 Pro', '17 Pro Max'],
+    samsung: ['S22 Ultra', 'S23 Ultra', 'S24 Ultra', 'S25 Ultra', 'S26 Ultra'],
+  };
+
+  let editingId       = null;
+  let deleteTarget    = null;
+  let adminSearch     = '';
+  let adminCatFilter  = 'all';
+  let allProducts     = [];
+  let allOrders       = [];
+  let pendingFiles    = [];
+  let pendingExisting = [];
   let toastTimer;
 
   const loginScreen  = document.getElementById('login-screen');
@@ -51,6 +56,9 @@
   const pFeatured    = document.getElementById('p-featured');
   const pNew         = document.getElementById('p-new');
   const pImageFile   = document.getElementById('p-image-file');
+  const pBrand       = document.getElementById('p-brand');
+  const modelCheckboxes = document.getElementById('model-checkboxes');
+  const modelGrid    = document.getElementById('model-grid');
   const delOverlay   = document.getElementById('del-overlay');
   const delName      = document.getElementById('del-name');
   const delConfirm   = document.getElementById('del-confirm');
@@ -58,7 +66,7 @@
   const ordersTbody  = document.getElementById('orders-tbody');
   const ordersEmpty  = document.getElementById('orders-empty');
 
-  /* AUTH */
+  /* ══ AUTH ══ */
   function checkAuth() {
     if (sessionStorage.getItem(AUTH_KEY) === '1') showDashboard();
     else showLogin();
@@ -97,7 +105,7 @@
     loginPass.value = '';
   });
 
-  /* DATA */
+  /* ══ DATA ══ */
   async function loadAll() {
     try {
       [allProducts, allOrders] = await Promise.all([
@@ -112,7 +120,7 @@
     }
   }
 
-  /* NAV */
+  /* ══ NAV ══ */
   navItems.forEach(btn => {
     btn.addEventListener('click', () => {
       navItems.forEach(b => b.classList.remove('active'));
@@ -129,7 +137,7 @@
     if (view === 'add' && !editingId) resetForm();
   }
 
-  /* STATS */
+  /* ══ STATS ══ */
   function updateStats() {
     statTotal.textContent    = allProducts.length;
     statStock.textContent    = allProducts.filter(p => p.stock > 0).length;
@@ -137,7 +145,7 @@
     statOrders.textContent   = allOrders.length;
   }
 
-  /* PRODUCTS TABLE */
+  /* ══ PRODUCTS TABLE ══ */
   function renderTable() {
     let list = [...allProducts];
     if (adminCatFilter !== 'all') list = list.filter(p => p.category === adminCatFilter);
@@ -188,7 +196,7 @@
   adminSearchI.addEventListener('input', e => { adminSearch = e.target.value.trim(); renderTable(); });
   adminCatSel.addEventListener('change', e => { adminCatFilter = e.target.value; renderTable(); });
 
-  /* ORDERS */
+  /* ══ ORDERS ══ */
   function renderOrders() {
     if (!allOrders.length) {
       if (ordersTbody) ordersTbody.innerHTML = '';
@@ -206,7 +214,7 @@
         <tr class="order-row" data-order-id="${esc(o.id)}">
           <td><strong>${esc(o.id)}</strong></td>
           <td>${esc(o.customer.name)}<br><small>${esc(o.customer.phone)}</small></td>
-          <td>${o.items.map(i => `${esc(i.name)} x${i.qty}`).join('<br>')}</td>
+          <td>${o.items.map(i => `${esc(i.name)}${i.model ? ` (${esc(i.model)})` : ''} x${i.qty}`).join('<br>')}</td>
           <td>${JazoAPI.formatPrice(o.total)}</td>
           <td><span class="order-status ${statusClass}">${esc(o.status)}</span></td>
           <td>${date}</td>
@@ -243,18 +251,14 @@
         </tr>`;
     }).join('');
 
-    // Toggle detail panel on row click
     ordersTbody.querySelectorAll('.order-row').forEach(row => {
       row.addEventListener('click', (e) => {
-        // Don't toggle when clicking the status dropdown
         if (e.target.closest('select')) return;
         const orderId = row.dataset.orderId;
         const panel = document.getElementById('detail-' + orderId);
         const isOpen = panel.classList.contains('open');
-        // Close all panels first
         ordersTbody.querySelectorAll('.order-detail-panel').forEach(p => p.classList.remove('open'));
         ordersTbody.querySelectorAll('.order-row').forEach(r => r.classList.remove('expanded'));
-        // Open this one if it was closed
         if (!isOpen) {
           panel.classList.add('open');
           row.classList.add('expanded');
@@ -262,7 +266,6 @@
       });
     });
 
-    // Status dropdown change
     ordersTbody.querySelectorAll('.status-select').forEach(sel => {
       sel.addEventListener('change', async () => {
         try {
@@ -275,10 +278,29 @@
       });
     });
   }
-  /* PRODUCT FORM */
+
+  /* ══ BRAND / MODEL SELECTOR ══ */
+  function renderModelGrid(brand, selected = []) {
+    if (!brand || !MODELS[brand]) {
+      modelCheckboxes.style.display = 'none';
+      modelGrid.innerHTML = '';
+      return;
+    }
+    modelCheckboxes.style.display = 'block';
+    modelGrid.innerHTML = MODELS[brand].map(model => `
+      <label class="model-check-label">
+        <input type="checkbox" name="model" value="${model}" ${selected.includes(model) ? 'checked' : ''} />
+        ${brand === 'iphone' ? 'iPhone ' : 'Samsung '}${model}
+      </label>
+    `).join('');
+  }
+
+  pBrand.addEventListener('change', () => renderModelGrid(pBrand.value));
+
+  /* ══ PRODUCT FORM ══ */
   function resetForm() {
-    editingId    = null;
-    pendingFiles = [];
+    editingId       = null;
+    pendingFiles    = [];
     pendingExisting = [];
     productForm.reset();
     editIdField.value     = '';
@@ -286,16 +308,18 @@
     submitBtn.textContent = 'Add Product';
     cancelEdit.style.display = 'none';
     formError.textContent = '';
+    pBrand.value = '';
+    renderModelGrid('');
     renderImageGrid();
-  
   }
 
   function startEdit(id) {
     const p = allProducts.find(x => x.id === id);
     if (!p) return;
-    editingId    = id;
-    pendingFiles = [];
+    editingId       = id;
+    pendingFiles    = [];
     pendingExisting = (p.images && p.images.length) ? [...p.images] : (p.image ? [p.image] : []);
+
     formTitle.textContent    = 'Edit Product';
     submitBtn.textContent    = 'Save Changes';
     cancelEdit.style.display = 'inline-flex';
@@ -308,10 +332,12 @@
     pStock.value      = p.stock;
     pFeatured.checked = p.featured;
     pNew.checked      = p.is_new;
+    pBrand.value      = p.brand || '';
+    renderModelGrid(p.brand || '', p.model_options || []);
     formError.textContent = '';
     renderImageGrid();
-   
-    // Show existing images as previews
+
+    /* show existing images as previews */
     const existingImages = (p.images && p.images.length) ? p.images : (p.image ? [p.image] : []);
     existingImages.forEach(url => {
       const wrap = document.createElement('div');
@@ -324,7 +350,6 @@
       removeBtn.innerHTML = '&times;';
       removeBtn.addEventListener('click', () => {
         wrap.remove();
-        // also remove from pendingExisting
         pendingExisting = pendingExisting.filter(u => u !== url);
       });
       wrap.appendChild(img);
@@ -361,27 +386,29 @@
 
     try {
       let imageUrls = [];
-
       if (pendingFiles.length) {
         submitBtn.textContent = 'Uploading images…';
         imageUrls = await Promise.all(pendingFiles.map(f => JazoAPI.uploadImage(f)));
       }
-
-      // Editing with no new images — keep existing ones
-      // Combine kept existing images with any new uploads
       imageUrls = [...pendingExisting, ...imageUrls];
 
+      const selectedModels = Array.from(
+        modelGrid.querySelectorAll('input[name="model"]:checked')
+      ).map(i => i.value);
+
       const payload = {
-        name:        pName.value.trim(),
-        category:    pCategory.value,
-        description: pDesc.value.trim(),
-        price:       Number(pPrice.value),
-        old_price:   pOldPrice.value ? Number(pOldPrice.value) : null,
-        stock:       Number(pStock.value),
-        featured:    pFeatured.checked,
-        is_new:      pNew.checked,
-        image:       imageUrls[0] || '',
-        images:      imageUrls,
+        name:          pName.value.trim(),
+        category:      pCategory.value,
+        description:   pDesc.value.trim(),
+        price:         Number(pPrice.value),
+        old_price:     pOldPrice.value ? Number(pOldPrice.value) : null,
+        stock:         Number(pStock.value),
+        featured:      pFeatured.checked,
+        is_new:        pNew.checked,
+        image:         imageUrls[0] || '',
+        images:        imageUrls,
+        brand:         pBrand.value || '',
+        model_options: selectedModels,
       };
 
       if (editingId) {
@@ -409,7 +436,7 @@
     }
   });
 
-  /* IMAGE UPLOAD GRID */
+  /* ══ IMAGE UPLOAD GRID ══ */
   const imgAddBtn     = document.getElementById('img-add-btn');
   const imgUploadGrid = document.getElementById('img-upload-grid');
 
@@ -431,9 +458,9 @@
       const img       = document.createElement('img');
       img.src         = URL.createObjectURL(file);
       const removeBtn = document.createElement('button');
-      removeBtn.className   = 'img-thumb-remove';
-      removeBtn.type        = 'button';
-      removeBtn.innerHTML   = '&times;';
+      removeBtn.className = 'img-thumb-remove';
+      removeBtn.type      = 'button';
+      removeBtn.innerHTML = '&times;';
       removeBtn.addEventListener('click', () => {
         pendingFiles.splice(i, 1);
         renderImageGrid();
@@ -444,7 +471,7 @@
     });
   }
 
-  /* DELETE */
+  /* ══ DELETE ══ */
   function confirmDelete(id, name) {
     deleteTarget = id;
     delName.textContent = name;
@@ -469,7 +496,7 @@
     if (e.target === delOverlay) { deleteTarget = null; delOverlay.classList.remove('active'); }
   });
 
-  /* TOAST */
+  /* ══ TOAST ══ */
   function showToast(msg) {
     toast.textContent = msg;
     toast.classList.add('show');
@@ -483,7 +510,7 @@
       .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  /* MOBILE SIDEBAR */
+  /* ══ MOBILE SIDEBAR ══ */
   const adminHamburger = document.getElementById('admin-hamburger');
   const sidebar        = document.querySelector('.sidebar');
   const sidebarOverlay = document.getElementById('sidebar-overlay');
@@ -505,7 +532,7 @@
     });
   }
 
-  /* BOOT */
+  /* ══ BOOT ══ */
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
     document.getElementById('view-products').style.display = 'flex';

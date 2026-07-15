@@ -393,3 +393,30 @@ input, select, textarea { font-family: inherit; font-size: 14px; }
   .order-detail-col { border-right: none !important; border-top: 1px dashed rgba(13,148,136,0.2); }
   .order-detail-col:first-child { border-top: none; }
 }
+.model-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.model-check-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--charcoal);
+  cursor: pointer;
+  transition: var(--transition);
+  user-select: none;
+}
+.model-check-label:hover { border-color: var(--gold); }
+.model-check-label input { accent-color: var(--gold); width: 14px; height: 14px; }
+.model-check-label:has(input:checked) {
+  border-color: var(--gold);
+  background: var(--gold-bg);
+  color: var(--gold);
+}
