@@ -77,7 +77,7 @@
 
   /* ══ PRODUCT GRID ══ */
   function renderGrid() {
-    const catLabels = { all: 'All Products', cases: 'Cases', chargers: 'Chargers', earphones: 'Earphones', 'screen-protectors': 'Screen Protectors', powerbanks: 'Powerbanks', accessories: 'Accessories' };
+    const catLabels = { all: 'All Products', phones: 'Phones' , cases: 'Cases', chargers: 'Chargers', earphones: 'Earphones', 'screen-protectors': 'Screen Protectors', powerbanks: 'Powerbanks', accessories: 'Accessories' };
     shopHeading.textContent = catLabels[activeCategory] || 'All Products';
 
     if (!filteredProducts.length) {
