@@ -228,7 +228,7 @@
         if (errEl) errEl.style.display = 'block';
         return;
       }
-      if (p.color_options && p.color_options.length && !selectedColor) {
+      if (!selectedColor) {
         const errEl = document.getElementById('pp-color-error');
         if (errEl) errEl.style.display = 'block';
         return;
